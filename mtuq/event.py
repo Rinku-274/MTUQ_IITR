@@ -1,6 +1,6 @@
 
 import numpy as np
-import obspy
+import obspy, re
 from obspy.core import UTCDateTime
 
 from mtuq.util import AttribDict, asarray
@@ -104,12 +104,12 @@ class MomentTensor(object):
         """
         array = self._array
         return {
-            'Mrr': array[0],
-            'Mtt': array[1],
-            'Mpp': array[2],
-            'Mrt': array[3],
-            'Mrp': array[4],
-            'Mtp': array[5],
+            'Mrr': array[0]*10**7,
+            'Mtt': array[1]*10**7,
+            'Mpp': array[2]*10**7,
+            'Mrt': array[3]*10**7,
+            'Mrp': array[4]*10**7,
+            'Mtp': array[5]*10**7,
             }
 
 
@@ -173,6 +173,15 @@ class MomentTensor(object):
         'longitude:       '+str(origin.longitude)[0:7],
         'depth:           '+str(origin.depth_in_m*10**(-3))[0:4],
         mt_dict)
+        with open('CMTSOLUTION' , 'w') as out_file:
+                        out_file.write(str(cmt))
+        with open("CMTSOLUTION",'r') as file:
+            for line in file:
+                data = re.sub(r"[\([{})\]]", "", line)
+                new_string = data.replace("'","")
+                solution = new_string.replace(', ','\n')
+        with open('CMTSOLUTION' , 'w') as out_file:
+                        out_file.write(str(solution))
 
 
 class Force(object):
