@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 
-import os
+import os, shutil
 import numpy as np
-
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin, MomentTensor
-from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_dc
+from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_dc, plot_time_shifts
+from mtuq.graphics.attrs import custom_backend
 from mtuq.grid import DoubleCoupleGridRegular
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
-
 
 
 if __name__=='__main__':
@@ -239,6 +238,22 @@ if __name__=='__main__':
         # making the cmt solution
         MW = best_mt.magnitude()
         MomentTensor.cmt(origin, event_id, mt_dict, MW)
+        
+        #making spider plots
+        
+        attrs_bw =  misfit_bw.collect_attributes(data_bw, greens_bw, best_mt)
+        attrs_sw =  misfit_sw.collect_attributes(data_sw, greens_sw, best_mt)
+        
+        dir_1 = './time_shift_bw'
+        if os.path.exists(dir_1):
+        	shutil.rmtree(dir_1)
+        os.makedirs(dir_1)
+        plot_time_shifts(dir_1+'/', attrs_bw, stations, origin, backend=custom_backend)
+        dir_2 = './time_shift_sw'
+        if os.path.exists(dir_2):
+        	shutil.rmtree(dir_2)
+        os.makedirs(dir_2)
+        plot_time_shifts(dir_2+'/', attrs_sw, stations, origin, backend=custom_backend)
         
         
         print('\nFinished\n')

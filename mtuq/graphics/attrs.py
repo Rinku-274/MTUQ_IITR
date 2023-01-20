@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 from matplotlib import pyplot
+import pygmt
 from os.path import join
 
 from mtuq.util import defaults, warn
@@ -261,5 +262,73 @@ def _default_backend(filename, values, stations, origin,
 
     pyplot.savefig(filename)
     pyplot.close()
+    
+def custom_backend(filename, values, stations, origin,
+    zero_centered=True, label='Time shift (s)'):
+
+    fig = pygmt.Figure()
+    min_lat = origin.latitude - 6
+    max_lat = origin.latitude + 6
+    min_lon = origin.longitude - 6
+    max_lon = origin.longitude + 6
+
+    gmt_region = [min_lon,max_lon,min_lat,max_lat]
+    pro_lon = "C" + str(int(origin.longitude))
+    pro_lat = str(int(origin.latitude))
+    gmt_projection = "{}/{}/".format(pro_lon,pro_lat) + "12c"
+    gmt_frame = ["xa5", "ya2"]
+
+    fig.basemap(
+        region=gmt_region,
+        projection=gmt_projection,
+        frame=gmt_frame,
+        )
+
+    fig.coast(
+        land="grey80",
+        shorelines=True,
+        area_thresh=100,
+        )
+
+    # construct color palette
+    cmap = "polar"
+
+    if zero_centered:
+        limits = (-np.max(np.abs(values)), +np.max(np.abs(values)))
+    else:
+        limits = (np.min(values), np.max(values))
+
+    pygmt.makecpt(
+        cmap=cmap,
+        series=limits,
+        )
+
+    # plot stations
+    for _i, station in enumerate(stations):
+        fig.plot(
+            x=station.longitude, y=station.latitude,
+            cmap=True, color="+z", zvalue=values[_i],
+            style="t.5c", pen="1p",
+            )
+
+    # plot line segments
+    for _i, station in enumerate(stations):
+        fig.plot(
+            x=(origin.longitude, station.longitude),
+            y=(origin.latitude, station.latitude),
+            cmap=True, zvalue=values[_i],
+            pen="thick,+z,-"
+            )
+
+    # plot origin
+    fig.plot(
+        x=origin.longitude, y=origin.latitude,
+        style="a.5c", color="black", pen="1p"
+        )
+
+    # add colorbar
+    fig.colorbar(frame=["x+l%s" % label])
+
+    fig.savefig(filename)
 
 
