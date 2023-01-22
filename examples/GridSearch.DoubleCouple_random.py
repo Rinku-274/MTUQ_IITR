@@ -4,14 +4,15 @@ import os, shutil
 import numpy as np
 from mtuq import read, open_db, download_greens_tensors
 from mtuq.event import Origin, MomentTensor
-from mtuq.graphics import plot_data_greens2, plot_beachball, plot_misfit_dc, plot_time_shifts
+from mtuq.graphics import plot_data_greens2, plot_beachball, plot_time_shifts
 from mtuq.graphics.attrs import custom_backend
-from mtuq.grid import DoubleCoupleGridRegular
+from mtuq.grid import DoubleCoupleGridRandom
 from mtuq.grid_search import grid_search
 from mtuq.misfit import Misfit
 from mtuq.process_data import ProcessData
 from mtuq.util import fullpath, merge_dicts, save_json
 from mtuq.util.cap import parse_station_codes, Trapezoid
+from mtuq.graphics.uq import omega
 
 
 if __name__=='__main__':
@@ -96,8 +97,8 @@ if __name__=='__main__':
     # Next, we specify the moment tensor grid and source-time function
     #
 
-    grid = DoubleCoupleGridRegular(
-        npts_per_axis=40,
+    grid = DoubleCoupleGridRandom(
+        npts=64000,
         magnitudes=[4.5])
 
     wavelet = Trapezoid(
@@ -214,8 +215,6 @@ if __name__=='__main__':
             best_mt, stations, origin)
 
 
-        plot_misfit_dc(event_id+'DC_misfit.png', results)
-
 
         print('Saving results...\n')
 
@@ -233,8 +232,11 @@ if __name__=='__main__':
 
 
         # save misfit surface
-        results.save(event_id+'DC_misfit.nc')
+        results.save(event_id+'DC_misfit.hf5')
         
+        #plotting uncertainty curves
+        omega.plot_cdf('cdf.png', results, var=50, nbins=40)
+        omega.plot_pdf('pdf.png', results, var= 50, nbins=40)
 
         # making the cmt solution
         MW = best_mt.magnitude()

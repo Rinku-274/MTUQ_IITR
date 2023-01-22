@@ -4,10 +4,10 @@ import numpy as np
 from matplotlib import pyplot
 from os.path import exists
 from xarray import DataArray
-
+from sklearn.metrics import auc
 from mtuq.graphics.uq import _nothing_to_plot
 from mtuq.graphics._gmt import read_cpt, _cpt_path
-
+from scipy.interpolate import make_interp_spline
 
 def _plot_dc_matplotlib(filename, coords, 
     values_h_kappa, values_sigma_kappa, values_sigma_h,
@@ -123,12 +123,12 @@ def _plot_depth_matplotlib(filename, depths, values,
     pyplot.savefig(filename)
 
 
-def _plot_omega_matplotlib(filename, omega, values,
+def _plot_omega_matplotlib_test(filename, omega, values,
     title=None, xlabel='Angular distance', ylabel=None, figsize=(6., 6.), fontsize=16.):
 
     pyplot.figure(figsize=figsize)
-    pyplot.plot(omega, values, 'k-')
-
+    pyplot.plot(omega, values, 'k.')
+    #pyplot.plot(om, likelyhood, 'k.')
     pyplot.xlim([0., 180.])
 
     if title:
@@ -142,10 +142,58 @@ def _plot_omega_matplotlib(filename, omega, values,
 
     pyplot.savefig(filename)
 
+def _plot_omega_matplotlib(filename, omega, values1, values2,
+    title=None, xlabel='Angular distance', ylabel=None, figsize=(15., 6.), fontsize=16.):
 
-#
-# utility functions
-#
+    pyplot.figure(figsize=figsize)
+    #pyplot.plot(omega, values, 'k-')
+    X_Y_Spline1 = make_interp_spline(omega, values1)
+    X_Y_Spline2 = make_interp_spline(omega, values2)
+    X_ = np.linspace(omega.min(), omega.max(), 1000)
+    Y_1 = X_Y_Spline1(X_)
+    Y_2 = X_Y_Spline2(X_)
+    pyplot.plot(X_, Y_1, 'g-')
+    pyplot.plot(X_, Y_2, 'b-')
+    pyplot.xlim([0., 180.])
+
+    if title:
+        pyplot.title(title, fontsize=fontsize)
+
+    if xlabel:
+         pyplot.xlabel(xlabel, fontsize=fontsize)
+
+    if ylabel:
+         pyplot.ylabel(ylabel, fontsize=fontsize)
+
+    pyplot.savefig(filename)
+
+def _plot_rho_av(filename, x, y, xlabel='V', ylabel=(r"$\rho(V)$"), figsize=(6., 6.), fontsize=10.):
+    pyplot.figure(figsize=figsize)
+    p = [0,1]
+    q = [0,1]
+    pyplot.plot(x, y, 'r-')
+    pyplot.plot(p, q, 'k--')
+    pyplot.xlim([0., 1.])
+    pyplot.ylim([0., 1.])
+    pyplot.fill_between(
+        x= x, 
+        y1= y, 
+        color= "k",
+        alpha= 0.2)
+    k = auc(x,y)
+    pyplot.text(0.7, 0.05, r"$\rho_{av} =$"+ str(k)[0:4])
+    if xlabel:
+         pyplot.xlabel(xlabel, fontsize=fontsize)
+
+    if ylabel:
+         pyplot.ylabel(ylabel, fontsize=fontsize)
+
+    pyplot.savefig(filename)
+
+    
+
+
+
 
 def _centers_to_edges(v):
     if issubclass(type(v), DataArray):
@@ -225,4 +273,3 @@ def _set_dc_labels(axes, **kwargs):
 
     # lower left panel
     axes[1][0].axis('off')
-
