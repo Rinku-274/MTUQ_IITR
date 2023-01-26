@@ -256,7 +256,7 @@ def _parse_limits(values):
 
     minval = masked.min()
     maxval = masked.max()
-    exp = _exponent(masked)
+    exp = np.floor(np.log10(np.max(np.abs(masked))))
 
     if -1 <= exp <= 2:
         return minval, maxval, 0
@@ -264,6 +264,7 @@ def _parse_limits(values):
     else:
         minval /= 10**exp
         maxval /= 10**exp
+        masked /= 10**exp
         return minval, maxval, exp
 
 

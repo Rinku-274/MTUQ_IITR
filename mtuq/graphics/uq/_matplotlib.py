@@ -128,7 +128,6 @@ def _plot_omega_matplotlib_test(filename, omega, values,
 
     pyplot.figure(figsize=figsize)
     pyplot.plot(omega, values, 'k.')
-    #pyplot.plot(om, likelyhood, 'k.')
     pyplot.xlim([0., 180.])
 
     if title:
@@ -146,7 +145,6 @@ def _plot_omega_matplotlib(filename, omega, values1, values2,
     title=None, xlabel='Angular distance', ylabel=None, figsize=(15., 6.), fontsize=16.):
 
     pyplot.figure(figsize=figsize)
-    #pyplot.plot(omega, values, 'k-')
     X_Y_Spline1 = make_interp_spline(omega, values1)
     X_Y_Spline2 = make_interp_spline(omega, values2)
     X_ = np.linspace(omega.min(), omega.max(), 1000)

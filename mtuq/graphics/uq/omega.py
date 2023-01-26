@@ -31,12 +31,9 @@ def plot_pdf(filename, df, var, nbins=50, backend=_plot_omega_matplotlib, **kwar
     if not isuniform(df):
         warn('plot_pdf requires randomly-drawn grid')
         return
-
     omega, pdf, likelihoods_homo =_calculate_pdf(df, var, nbins=nbins)
     backend(filename, omega, pdf, likelihoods_homo, **kwargs)
-    _misfit_vs_omega(df)
-    probability_vs_omega(df)
-    _plot_rho_vs_V(df, var, nbins=nbins)
+
     return omega
 
 
@@ -68,7 +65,7 @@ def plot_cdf(filename, df, var, nbins=50, backend=_plot_omega_matplotlib, **kwar
 def plot_screening_curve(filename, ds, var, **kwargs):
     """ Plots explosion screening curve
 
-    In other words, plots probability density function that results from 
+    In other words, plots ility density function that results from 
     integrating outward in angular distance from an isotropic moment tensor
     """
 
@@ -86,7 +83,7 @@ def _screening_curve_random(df, var):
 def _screening_curve_regular(da, var):
     raise NotImplementedError
     
-def _misfit_vs_omega(df,backend=_plot_omega_matplotlib_test):
+def misfit_vs_omega(filename,df,backend=_plot_omega_matplotlib_test):
     """ Plots the misfit values with corresponding angular distance
     """
      
@@ -96,10 +93,10 @@ def _misfit_vs_omega(df,backend=_plot_omega_matplotlib_test):
     omega_array = _compute_omega(mt_array,mt_best)
      
      
-    backend('misfit_vs_omega.png',omega_array,df.values)
+    backend(filename,omega_array,df.values)
     
     
-def probability_vs_omega(df,backend=_plot_omega_matplotlib_test):
+def probability_vs_omega(filename, df,backend=_plot_omega_matplotlib_test):
      """ Plots the probability values with corresponding angular distance
     """
      mt_array = _to_array(df)
@@ -107,9 +104,9 @@ def probability_vs_omega(df,backend=_plot_omega_matplotlib_test):
      mt_best = mt_array[idx,:]
      omega_array = _compute_omega(mt_array,mt_best)
      prob = np.exp(-(df.values))
-     #print(omega_array)
 
-     backend('prob_vs_omega.png',omega_array,prob)
+
+     backend(filename, omega_array, prob)
      
 
 def _compute_omega(mt1,mt2):
@@ -131,15 +128,13 @@ def _calculate_pdf(df, var, nbins=100):
     df = df.copy()
     df = np.exp(-df*(10**10))*400
     df_homo = np.exp(-df*0*(10**10))*400
-    #df = np.exp(-df/np.mean(df))*400
-    #df_homo = np.exp(-df*0/np.mean(df))*400
-    #df = np.exp(-df*(10**10)/(2.*40))
+
 
     # convert from lune to Cartesian parameters
     mt_array = _to_array(df)
     mt_array_homo = _to_array(df_homo)
     # maximum likelihood estimate
-    #idx = _argmax(df)
+
     idx =  _argMaxMin(df,True)
     idx_homo = _argMaxMin(df_homo,True)
     mt_best = mt_array[idx,:]
@@ -202,25 +197,22 @@ def _calculate_pdf(df, var, nbins=100):
 
     likelihoods /= sum(likelihoods)
     likelihoods_homo /= sum(likelihoods_homo)
-    #likelihoods /= 180.
-    #print(np.where(min(likelihoods)))
-    #likelihoods[0] = 0
+
     likelihoods = np.append(0, likelihoods)
     likelihoods_homo = np.append(0, likelihoods_homo)
     
-    #centers = np.append(min(centers), centers)
+
     return centers, likelihoods, likelihoods_homo
 
-def _plot_rho_vs_V(df, var, nbins, backend=_plot_rho_av):
+def plot_rho_vs_V(filename, df, var, nbins, backend=_plot_rho_av, **kwargs):
     v, rho_v, rho_v_homo = _calculate_pdf(df, var,nbins=nbins)
     rho_v = np.cumsum(rho_v)
     rho_v_homo = np.cumsum(rho_v_homo)
     for i in v:
         a = interp1d(v, rho_v_homo)(v)
         b = interp1d(v, rho_v)(v)
-    #print(a)
-    #print(b)
-    backend('rho_vs_v', a, b)
+
+    backend(filename, a, b, **kwargs)
 
 #
 # utility functions
